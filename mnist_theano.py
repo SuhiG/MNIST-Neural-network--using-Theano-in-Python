@@ -1,9 +1,14 @@
+'''Mini-batch Gradient Descent Algorithm used for MNIST dataset.
+no hidden layers
+Softmax function used for the output layer
+
+'''
 from __future__ import print_function
 import pickle
 import gzip
 import numpy as np
-#import matplotlib.pyplot as plt
-#import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib
 import theano as t
 import theano.tensor as tt
 import timeit
@@ -13,11 +18,11 @@ print("Using device", t.config.device)
 
 print("Loading data")
 
-f = gzip.open('mnist.pkl.gz', 'rb')
-train_set, valid_set, test_set = pickle.load(f,encoding="latin1")
+f = gzip.open('mnist.pkl.gz', 'rb') 
+train_set, valid_set, test_set = pickle.load(f,encoding="latin1")   #load the mnist dataset (use 'latin1' for python3)
 #f.close()
 
-plt.rcParams["figure.figsize"]=(10,10)
+plt.rcParams["figure.figsize"]=(10,10) 
 plt.rcParams["image.cmap"]="gray"
 
 #for i in range(9):
@@ -33,19 +38,19 @@ train_set_y=t.shared(np.asarray(train_set[1],dtype="int32"))
 
 print("Building model")
 batch_size=600
-n_in=28*28
-n_out=10
+n_in=28*28 #inputs
+n_out=10    #outputs
 
 x=tt.matrix("x")
 y=tt.ivector("y")
-w=t.shared(value=np.zeros((n_in,n_out),dtype=t.config.floatX),name="w",borrow=True)
-b=t.shared(value=np.zeros((n_out,),dtype=t.config.floatX),name="b",borrow=True)
+w=t.shared(value=np.zeros((n_in,n_out),dtype=t.config.floatX),name="w",borrow=True) #calculating the weights 
+b=t.shared(value=np.zeros((n_out,),dtype=t.config.floatX),name="b",borrow=True) #calculating the biases
 
-model=tt.nnet.softmax(tt.dot(x,w)+b)
+model=tt.nnet.softmax(tt.dot(x,w)+b) #calculating the output by using matrix dot product with softmax optimization function
 
-y_pred=tt.argmax(model,axis=1)
-error = tt.mean(tt.neq(y_pred, y))
-
+y_pred=tt.argmax(model,axis=1) #selecting the maximum value from the predicted outputs
+error = tt.mean(tt.neq(y_pred, y))#neq-> a!=b ,when True returns 1 & when false 0
+#and 
 
 cost=-tt.mean(tt.log(model)[tt.arange(y.shape[0]),y])
 
@@ -76,7 +81,8 @@ print("Training")
 
 n_epochs=100
 #print_every=50000
-
+x_g=[]
+y_g=[]
 n_train_batches=train_set[0].shape[0]//batch_size
 
 n_iters=n_epochs*n_train_batches
@@ -111,5 +117,16 @@ for epoch in range(n_epochs):
                 valid_error[val_iteration]*100,
                 valid_loss[val_iteration]
             ))
+            x_g.append(epoch)
+            y_g.append(train_error[iteration]*100)
+            
+           
 end_time = timeit.default_timer()
-print( end_time -start_time )
+print("Time duration =", end_time -start_time )
+
+
+            
+print(x_g)            
+print(y_g)
+plt.plot(x_g,y_g)
+plt.show()
